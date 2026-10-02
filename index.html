@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quizzo – Think you know it all? Prove it.</title>
+<meta name="description" content="Quizzo is a fast, fun quiz app. Play solo or challenge friends across hundreds of topics.">
+<style>
+  :root {
+    --ink: #1d1b3a;
+    --paper: #fff8ec;
+    --violet: #6c4cf1;
+    --pink: #ff5d8f;
+    --yellow: #ffd23f;
+    --teal: #19c3a6;
+    --orange: #ff8a3d;
+    --radius: 18px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif; color: var(--ink); background: var(--paper); line-height: 1.55; }
+  a { color: inherit; text-decoration: none; }
+  :focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; border-radius: 8px; }
+  .wrap { width: min(1100px, 92%); margin-inline: auto; }
+
+  /* Header */
+  header { background: var(--paper); border-bottom: 3px solid var(--ink); position: sticky; top: 0; z-index: 10; }
+  .nav { display: flex; align-items: center; justify-content: space-between; height: 68px; }
+  .logo { font-weight: 900; font-size: 1.6rem; letter-spacing: -.03em; display: flex; align-items: center; gap: 8px; }
+  .logo b { background: var(--violet); color: #fff; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; transform: rotate(-6deg); }
+  nav ul { display: flex; gap: 26px; list-style: none; align-items: center; font-weight: 700; }
+  nav a:not(.btn):hover { color: var(--violet); }
+  .menu-btn { display: none; background: var(--yellow); border: 3px solid var(--ink); border-radius: 10px; padding: 6px 14px; font-weight: 800; cursor: pointer; color: var(--ink); }
+
+  .btn { display: inline-block; background: var(--pink); color: var(--ink); padding: 12px 24px; border: 3px solid var(--ink); border-radius: 12px; font-weight: 800; font-size: 1rem; cursor: pointer; box-shadow: 4px 4px 0 var(--ink); transition: transform .12s, box-shadow .12s; font-family: inherit; }
+  .btn:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink); }
+  .btn.yellow { background: var(--yellow); }
+  .btn.white { background: #fff; }
+
+  /* Hero */
+  .hero-bg { background: var(--violet); color: #fff; border-bottom: 3px solid var(--ink); overflow: hidden; position: relative; }
+  .hero { display: grid; grid-template-columns: 1.05fr .95fr; gap: 48px; align-items: center; padding: 80px 0; position: relative; z-index: 1; }
+  h1 { font-size: clamp(2.4rem, 6vw, 4.2rem); line-height: 1.02; letter-spacing: -.035em; font-weight: 900; margin-bottom: 20px; }
+  h1 .hl { background: var(--yellow); color: var(--ink); padding: 0 .15em; border-radius: 10px; display: inline-block; transform: rotate(-2deg); }
+  .lead { font-size: 1.2rem; max-width: 44ch; margin-bottom: 30px; color: #ece8ff; }
+  .cta-row { display: flex; gap: 14px; flex-wrap: wrap; }
+  .blob { position: absolute; border-radius: 50%; z-index: 0; }
+  .blob.a { width: 260px; height: 260px; background: var(--pink); right: -80px; top: -90px; }
+  .blob.b { width: 140px; height: 140px; background: var(--teal); left: -40px; bottom: -50px; }
+
+  /* Quiz card */
+  .quiz { background: #fff; color: var(--ink); border: 3px solid var(--ink); border-radius: 22px; padding: 26px; box-shadow: 8px 8px 0 var(--ink); }
+  .quiz-top { display: flex; justify-content: space-between; font-weight: 800; font-size: .95rem; margin-bottom: 10px; }
+  .qbar { height: 10px; background: #eee9ff; border: 2px solid var(--ink); border-radius: 99px; overflow: hidden; margin-bottom: 18px; }
+  .qbar i { display: block; height: 100%; width: 0; background: var(--teal); transition: width .3s; }
+  .quiz h2 { font-size: 1.3rem; line-height: 1.25; margin-bottom: 16px; }
+  .answers { display: grid; gap: 10px; }
+  .ans { text-align: left; padding: 12px 16px; font-size: 1rem; font-weight: 700; font-family: inherit; color: var(--ink); background: var(--c); border: 3px solid var(--ink); border-radius: 12px; cursor: pointer; transition: transform .1s; }
+  .ans:nth-child(1) { --c: #ffe38a; }
+  .ans:nth-child(2) { --c: #ffc1d6; }
+  .ans:nth-child(3) { --c: #b8f0e4; }
+  .ans:nth-child(4) { --c: #d8ceff; }
+  .ans:hover:not(:disabled) { transform: translateX(4px); }
+  .ans.right { background: var(--teal); }
+  .ans.wrong { background: #ff6b6b; }
+  .ans:disabled { cursor: default; }
+  .feedback { min-height: 1.6em; margin-top: 14px; font-weight: 800; }
+  .quiz-end { text-align: center; padding: 10px 0; }
+  .quiz-end .score { font-size: 3.4rem; font-weight: 900; color: var(--violet); line-height: 1; margin: 8px 0; }
+  .hidden { display: none; }
+
+  /* Sections */
+  section { padding: 80px 0; }
+  .head { max-width: 600px; margin-bottom: 40px; }
+  h2.title { font-size: clamp(1.9rem, 4vw, 2.8rem); letter-spacing: -.025em; line-height: 1.1; font-weight: 900; margin-bottom: 10px; }
+  .head p { font-size: 1.1rem; }
+
+  /* Categories */
+  .cats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  .cat { background: var(--c); border: 3px solid var(--ink); border-radius: var(--radius); padding: 24px 20px; box-shadow: 5px 5px 0 var(--ink); transition: transform .15s; }
+  .cat:hover { transform: rotate(-1.5deg) translateY(-4px); }
+  .cat .emoji { font-size: 2.2rem; display: block; margin-bottom: 10px; }
+  .cat h3 { font-size: 1.15rem; }
+  .cat p { font-size: .92rem; }
+  .cat:nth-child(1) { --c: var(--yellow); }
+  .cat:nth-child(2) { --c: #ff9fbe; }
+  .cat:nth-child(3) { --c: #7fe3cf; }
+  .cat:nth-child(4) { --c: #c6b8ff; }
+  .cat:nth-child(5) { --c: #ffb787; }
+  .cat:nth-child(6) { --c: #9fd8ff; }
+  .cat:nth-child(7) { --c: #c8f17a; }
+  .cat:nth-child(8) { --c: #ffd1a0; }
+
+  /* Steps */
+  .steps-bg { background: var(--yellow); border-block: 3px solid var(--ink); }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; counter-reset: s; }
+  .step { background: #fff; border: 3px solid var(--ink); border-radius: var(--radius); padding: 28px; position: relative; counter-increment: s; }
+  .step::before { content: counter(s); position: absolute; top: -22px; left: 22px; width: 44px; height: 44px; border-radius: 50%; background: var(--pink); border: 3px solid var(--ink); display: grid; place-items: center; font-weight: 900; font-size: 1.2rem; }
+  .step:nth-child(2)::before { background: var(--teal); }
+  .step:nth-child(3)::before { background: var(--violet); color: #fff; }
+  .step h3 { margin: 10px 0 6px; font-size: 1.2rem; }
+
+  /* Stats */
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; text-align: center; }
+  .stat strong { display: block; font-size: clamp(2.4rem, 6vw, 3.8rem); font-weight: 900; line-height: 1; }
+  .stat:nth-child(1) strong { color: var(--violet); }
+  .stat:nth-child(2) strong { color: var(--pink); }
+  .stat:nth-child(3) strong { color: #0ea58b; }
+
+  /* FAQ */
+  details { background: #fff; border: 3px solid var(--ink); border-radius: 14px; padding: 16px 20px; max-width: 760px; margin-bottom: 12px; }
+  summary { cursor: pointer; font-weight: 800; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; font-size: 1.5rem; line-height: 1; color: var(--pink); }
+  details[open] summary::after { content: "–"; }
+  details p { margin-top: 10px; }
+
+  /* Signup */
+  .signup { background: var(--pink); border: 3px solid var(--ink); border-radius: 28px; padding: 56px 28px; text-align: center; box-shadow: 8px 8px 0 var(--ink); }
+  .signup p { margin: 8px 0 24px; font-size: 1.1rem; }
+  form { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  input[type=email] { padding: 13px 16px; border: 3px solid var(--ink); border-radius: 12px; font-size: 1rem; width: min(320px, 100%); font-family: inherit; }
+  .msg { margin-top: 16px; min-height: 1.5em; font-weight: 800; }
+
+  footer { background: var(--ink); color: #cfcbea; padding: 32px 0; margin-top: 80px; font-size: .92rem; }
+  footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+
+  @media (max-width: 860px) {
+    .hero { grid-template-columns: 1fr; padding: 56px 0; }
+    .cats { grid-template-columns: repeat(2, 1fr); }
+    .steps, .stats { grid-template-columns: 1fr; }
+    .steps { gap: 36px; }
+    .menu-btn { display: block; }
+    nav ul { display: none; position: absolute; top: 68px; left: 0; right: 0; flex-direction: column; background: var(--paper); padding: 20px; border-bottom: 3px solid var(--ink); gap: 16px; }
+    nav ul.open { display: flex; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a href="#" class="logo"><b>?</b>Quizzo</a>
+    <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="menu">Menu</button>
+    <nav>
+      <ul id="menu">
+        <li><a href="#topics">Topics</a></li>
+        <li><a href="#how">How it works</a></li>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a class="btn yellow" href="#signup">Play free</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="hero-bg">
+    <div class="blob a"></div><div class="blob b"></div>
+    <div class="wrap hero">
+      <div>
+        <h1>Think you know it all? <span class="hl">Prove it.</span></h1>
+        <p class="lead">Quick quizzes on hundreds of topics. Play solo, beat your streak, or challenge your friends.</p>
+        <div class="cta-row">
+          <a class="btn yellow" href="#signup">Play free</a>
+          <a class="btn white" href="#topics">Browse topics</a>
+        </div>
+      </div>
+
+      <div class="quiz" id="quiz" aria-live="polite">
+        <div id="play">
+          <div class="quiz-top"><span id="qcount">Question 1 of 3</span><span id="qscore">Score: 0</span></div>
+          <div class="qbar"><i id="qbar"></i></div>
+          <h2 id="qtext"></h2>
+          <div class="answers" id="answers"></div>
+          <p class="feedback" id="feedback"></p>
+        </div>
+        <div class="quiz-end hidden" id="end">
+          <p><strong>Quiz complete!</strong></p>
+          <div class="score" id="final"></div>
+          <p id="verdict"></p><br>
+          <button class="btn yellow" id="again">Play again</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="topics">
+    <div class="wrap">
+      <div class="head">
+        <h2 class="title">Pick a topic, any topic</h2>
+        <p>From sport to space, there's a quiz for every kind of know-it-all.</p>
+      </div>
+      <div class="cats">
+        <a href="#signup" class="cat"><span class="emoji" aria-hidden="true">🔬</span><h3>Science</h3><p>Atoms to galaxies</p></a>
+        <a href="#signup" class="cat"><span class="emoji" aria-hidden="true">🏛️</span><h3>History</h3><p>Dates that mattered</p></a>
+        <a href="#signup" class="cat"><span class="emoji" aria-hidden="true">🎬</span><h3>Movies</h3><p>Plots, stars and quotes</p></a>
+        <a href="#signup" class="cat"><span class="emoji" aria-hidden="true">🌍</span><h3>Geography</h3><p>Capitals and landmarks</p></a>
+        <a href="#signup" class="cat"><span class="emoji" aria-hidden="true">⚽</span><h3>Sports</h3><p>Records and rivalries</p></a>
+        <a href="#signup" class="cat"><span class="emoji" aria-hidden="true">🎵</span><h3>Music</h3><p>Hits through the decades</p></a>
+        <a href="#signup" class="cat"><span class="emoji" aria-hidden="true">🍜</span><h3>Food</h3><p>Dishes and ingredients</p></a>
+        <a href="#signup" class="cat"><span class="emoji" aria-hidden="true">💻</span><h3>Tech</h3><p>Gadgets and code</p></a>
+      </div>
+    </div>
+  </section>
+
+  <div class="steps-bg">
+    <section id="how">
+      <div class="wrap">
+        <div class="head">
+          <h2 class="title">Ready in three steps</h2>
+        </div>
+        <div class="steps">
+          <div class="step"><h3>Choose a topic</h3><p>Pick a category and a difficulty level.</p></div>
+          <div class="step"><h3>Answer fast</h3><p>Ten questions, one tap each. Quick answers earn bonus points.</p></div>
+          <div class="step"><h3>Challenge friends</h3><p>Share your score and see who can beat it.</p></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section>
+    <div class="wrap stats">
+      <div class="stat"><strong data-count="500">0</strong>topics to explore</div>
+      <div class="stat"><strong data-count="20000">0</strong>questions and counting</div>
+      <div class="stat"><strong data-count="3">0</strong>minutes per round</div>
+    </div>
+  </section>
+
+  <section id="faq" style="padding-top:0">
+    <div class="wrap">
+      <div class="head"><h2 class="title">Questions? Answered.</h2></div>
+      <details><summary>Is Quizzo free to play?</summary><p>Yes. Every quiz is free. You can upgrade later for extra topics and private rooms.</p></details>
+      <details><summary>Can I play with friends?</summary><p>Yes. Send a link, and friends can join your quiz and compete on the same questions.</p></details>
+      <details><summary>Can I make my own quiz?</summary><p>Yes. Add your own questions and answers, then share the quiz with anyone.</p></details>
+    </div>
+  </section>
+
+  <section id="signup" style="padding-top:0">
+    <div class="wrap">
+      <div class="signup">
+        <h2 class="title">Ready to play?</h2>
+        <p>Join the waitlist and be first in when Quizzo launches.</p>
+        <form id="form" novalidate>
+          <input type="email" id="email" placeholder="you@example.com" aria-label="Email address" required>
+          <button class="btn yellow" type="submit">Join waitlist</button>
+        </form>
+        <p class="msg" id="msg" role="status"></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© <span id="year"></span> Quizzo. All rights reserved.</span>
+    <span><a href="#">Privacy</a> &nbsp; <a href="#">Contact</a></span>
+  </div>
+</footer>
+
+<script>
+  // Mobile menu
+  const menuBtn = document.getElementById('menuBtn'), menu = document.getElementById('menu');
+  menuBtn.addEventListener('click', () => menuBtn.setAttribute('aria-expanded', menu.classList.toggle('open')));
+  menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    menu.classList.remove('open'); menuBtn.setAttribute('aria-expanded', false);
+  }));
+
+  // Mini quiz
+  const questions = [
+    { q: 'Which planet is known as the Red Planet?', a: ['Venus', 'Mars', 'Jupiter', 'Mercury'], c: 1 },
+    { q: 'What is the capital of Australia?', a: ['Sydney', 'Melbourne', 'Canberra', 'Perth'], c: 2 },
+    { q: 'How many strings does a standard guitar have?', a: ['Four', 'Five', 'Six', 'Eight'], c: 2 }
+  ];
+  let i = 0, score = 0, locked = false;
+  const $ = id => document.getElementById(id);
+
+  function show() {
+    const item = questions[i];
+    locked = false;
+    $('qcount').textContent = 'Question ' + (i + 1) + ' of ' + questions.length;
+    $('qscore').textContent = 'Score: ' + score;
+    $('qbar').style.width = (i / questions.length * 100) + '%';
+    $('qtext').textContent = item.q;
+    $('feedback').textContent = '';
+    $('answers').innerHTML = '';
+    item.a.forEach((text, idx) => {
+      const b = document.createElement('button');
+      b.className = 'ans'; b.textContent = text;
+      b.addEventListener('click', () => pick(idx));
+      $('answers').appendChild(b);
+    });
+  }
+
+  function pick(idx) {
+    if (locked) return;
+    locked = true;
+    const item = questions[i], btns = $('answers').children;
+    [...btns].forEach(b => b.disabled = true);
+    btns[item.c].classList.add('right');
+    if (idx === item.c) { score++; $('feedback').textContent = 'Correct! 🎉'; }
+    else { btns[idx].classList.add('wrong'); $('feedback').textContent = 'Not quite. Try the next one.'; }
+    $('qscore').textContent = 'Score: ' + score;
+    setTimeout(() => { i++; i < questions.length ? show() : finish(); }, 1200);
+  }
+
+  function finish() {
+    $('play').classList.add('hidden');
+    $('end').classList.remove('hidden');
+    $('final').textContent = score + '/' + questions.length;
+    $('verdict').textContent = score === questions.length ? 'Perfect score. You really do know it all!'
+      : score >= 2 ? 'Nice work. So close to perfect!' : 'Good start. Play again to beat it.';
+  }
+
+  $('again').addEventListener('click', () => {
+    i = 0; score = 0;
+    $('end').classList.add('hidden'); $('play').classList.remove('hidden');
+    show();
+  });
+  show();
+
+  // Count-up stats
+  const counters = document.querySelectorAll('[data-count]');
+  const run = el => {
+    const target = +el.dataset.count, start = performance.now(), dur = 1200;
+    const tick = now => {
+      const p = Math.min((now - start) / dur, 1);
+      el.textContent = Math.floor(target * p).toLocaleString() + (p === 1 && target >= 500 ? '+' : '');
+      if (p < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  };
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { run(e.target); io.unobserve(e.target); } }));
+    counters.forEach(c => io.observe(c));
+  } else counters.forEach(run);
+
+  // Signup
+  $('form').addEventListener('submit', e => {
+    e.preventDefault();
+    const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($('email').value.trim());
+    $('msg').textContent = ok ? "You're on the list! See you at the start line. 🎉" : 'Enter a valid email address, like you@example.com.';
+    if (ok) $('form').reset();
+  });
+
+  $('year').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>
